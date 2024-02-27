@@ -1,0 +1,17 @@
+#!/bin/bash
+
+PORT=$1
+INDEXDATAFILE="$2"
+FORCE=$3
+
+if grep -q "^$PORT " "$INDEXDATAFILE"
+then
+  #found port
+  if [ $FORCE -eq 0 ]
+  then
+    echo "ERROR: Port $PORT already in use. Select another or use -f or --force"
+    exit 1
+  else
+    sed -i "/^$PORT /d" "$INDEXDATAFILE"
+  fi
+fi

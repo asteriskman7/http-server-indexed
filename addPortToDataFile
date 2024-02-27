@@ -1,0 +1,45 @@
+#!/bin/bash
+
+PORT=$1
+RUNDIR="$2"
+INDEXDATAFILE="$3"
+INDEXHTMLFILE="$4"
+JUSTREBUILD="$5"
+
+if [ "$JUSTREBUILD" -ne 1 ]
+then
+  echo "$PORT $RUNDIR" >> "$INDEXDATAFILE"
+fi
+
+sort -n -o "$INDEXDATAFILE" "$INDEXDATAFILE"
+
+ADDRESS=`ifconfig | grep "inet " | grep -v "127\.0\.0\.1 " | awk '{print $2}'`
+
+
+rm -f "$INDEXHTMLFILE"
+
+cat << EOF > "$INDEXHTMLFILE"
+
+<html>
+  <head>
+    <title>$HOSTNAME http-server index</title>
+  </head>
+  <body>
+    <h1>http-server instances running on ${ADDRESS}</h1>
+    <table>
+      <tr><th>Port</th><th>Path</th></tr>
+EOF
+
+while read line
+do
+  linePort=`echo $line | sed 's/ .*//'`
+  linePath=`echo $line | cut -d' ' -f2-`
+  echo "<tr><td><a href='http://${ADDRESS}:$linePort'>$linePort</a></td><td>$linePath</td></tr>" >> "$INDEXHTMLFILE"
+done < "$INDEXDATAFILE"
+
+cat <<EOF >> "$INDEXHTMLFILE"
+    </table>
+  </body>
+</html>
+
+EOF

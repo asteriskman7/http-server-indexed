@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+#TODO: add some kind of help
+#TODO: remove port from index when server closes
+
+
+RUNDIR="$PWD"
+BINPATH=/usr/bin/http-server
+
+SCRIPTPATH=`realpath "$0"`
+SCRIPTDIR=`dirname $SCRIPTPATH`
+
+#TODO: make this all configurable
+INDEXDIR=`dirname "$SCRIPTPATH"`/indexdir
+INDEXDATAFILE="$INDEXDIR"/index.data
+INDEXHTMLFILE="$INDEXDIR"/index.html
+INDEXLOCKFILE="$INDEXDIR"/index.lock
+touch "$INDEXLOCKFILE"
+
+#TODO: make this configurable
+INDEXPORT=8080
+
+FORCE=0
+INDEXSERVER=0
+
+#get command line args
+#TODO: Use existing library
+ARGS=""
+while [ $# -gt 0 ]
+do
+  if [ "$1" = "-p" -o "$1" = "--port" ]
+  then
+    PORT=$2
+    ARGS="$ARGS $1 $2"
+    shift
+    shift
+  else
+    if [ $1 = "-f" -o $1 = "--force" ]
+    then
+      FORCE=1
+      shift
+    elif [ $1 = "-index" ]
+    then
+      INDEXSERVER=1
+      shift
+    else
+      ARGS="$ARGS \"$1\""
+      shift
+    fi
+  fi
+done
+
+if [ -z "$PORT" ]
+then
+  echo "ERROR: Must supply port number with either -p or --port"
+  exit 1
+fi
+
+if [ "$PORT" -eq $INDEXPORT -a $INDEXSERVER -eq 0 ]
+then
+  echo "ERROR: Must not use index port $INDEXPORT"
+  exit 1
+fi
+
+echo "Starting indexed http-server wrapper on port $PORT and path $RUNDIR"
+
+if [ ! -d "$INDEXDIR" ]
+then
+  mkdir "$INDEXDIR"
+fi
+
+if [ ! -f "$INDEXDATAFILE" ]
+then
+  touch "$INDEXDATAFILE"
+fi
+
+
+flock "$INDEXLOCKFILE" $SCRIPTDIR/removePortFromDataFile $PORT "$INDEXDATAFILE" $FORCE
+RC=$?
+
+if [ $RC -ne 0 ]
+then
+  exit $RC
+fi
+
+flock "$INDEXLOCKFILE" $SCRIPTDIR/addPortToDataFile $PORT "$RUNDIR" "$INDEXDATAFILE" "$INDEXHTMLFILE" 0
+
+function ctrl_c {
+  flock "$INDEXLOCKFILE" $SCRIPTDIR/removePortFromDataFile $PORT "$INDEXDATAFILE" 1 
+  flock "$INDEXLOCKFILE" $SCRIPTDIR/addPortToDataFile $PORT "$RUNDIR" "$INDEXDATAFILE" "$INDEXHTMLFILE" 1
+  exit 0
+}
+
+trap ctrl_c INT
+cd $RUNDIR
+eval $BINPATH $ARGS
+

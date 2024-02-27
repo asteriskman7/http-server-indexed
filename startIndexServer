@@ -1,0 +1,10 @@
+#!/bin/bash
+
+INDEXDIR=`dirname "$SCRIPTPATH"`/indexdir
+
+SCRIPTPATH=`realpath "$0"`
+SCRIPTDIR=`dirname $SCRIPTPATH`
+
+cd $INDEXDIR
+
+$SCRIPTDIR/http-server-indexed -p 8080 -c-1 -index
