@@ -1,0 +1,15 @@
+#!/bin/bash
+
+INDEXDATAFILE="$1"
+
+HIGHESTPORT=`tail -1 "$INDEXDATAFILE" | cut -d" " -f1`
+
+BASEPORT=8081
+
+if [ -z "$HIGHESTPORT" ]
+then
+  echo $BASEPORT
+else
+  (( NEXTPORT = HIGHESTPORT + 1 ))
+  echo $NEXTPORT
+fi

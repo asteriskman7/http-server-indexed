@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 #TODO: add some kind of help
-#TODO: remove port from index when server closes
 
 
 RUNDIR="$PWD"
@@ -52,8 +51,10 @@ done
 
 if [ -z "$PORT" ]
 then
-  echo "ERROR: Must supply port number with either -p or --port"
-  exit 1
+  NEXTPORT=`flock "$INDEXLOCKFILE" $SCRIPTDIR/getNextPort "$INDEXDATAFILE"`
+  echo "Automatically assigning port $NEXTPORT"
+  PORT=$NEXTPORT
+  ARGS="$ARGS -p $PORT"
 fi
 
 if [ "$PORT" -eq $INDEXPORT -a $INDEXSERVER -eq 0 ]
