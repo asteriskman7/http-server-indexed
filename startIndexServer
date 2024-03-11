@@ -5,6 +5,13 @@ INDEXDIR=`dirname "$SCRIPTPATH"`/indexdir
 SCRIPTPATH=`realpath "$0"`
 SCRIPTDIR=`dirname $SCRIPTPATH`
 
-cd $INDEXDIR
+if [ -d "$INDEXDIR" ]
+then
+  rm -r "$INDEXDIR"
+fi
+
+mkdir -p "$INDEXDIR"
+cd "$INDEXDIR"
+ln -s "$SCRIPTDIR/favicon.png" .
 
 $SCRIPTDIR/http-server-indexed -p 8080 -c-1 -index

@@ -22,6 +22,7 @@ cat << EOF > "$INDEXHTMLFILE"
 
 <html>
   <head>
+    <link rel='icon' href='favicon.png'>
     <title>$HOSTNAME http-server index</title>
   </head>
   <body>
